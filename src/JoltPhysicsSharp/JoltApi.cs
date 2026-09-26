@@ -3286,8 +3286,8 @@ internal static unsafe partial class JoltApi
     #region CharacterVsCharacterCollision
     public struct JPH_CharacterVsCharacterCollision_Procs
     {
-        public delegate* unmanaged<nint, nint, Mat4*, JPH_CollideShapeSettings*, Vector3*, void> CollideCharacter;
-        public delegate* unmanaged<nint, nint, Mat4*, Vector3*, JPH_ShapeCastSettings*, Vector3*, void> CastCharacter;
+        public delegate* unmanaged<nint, nint, void* /* JPH_RMat4 */, JPH_CollideShapeSettings*, void* /* JPH_RVec3 */, void> CollideCharacter;
+        public delegate* unmanaged<nint, nint, void* /* JPH_RMat4 */, Vector3*, JPH_ShapeCastSettings*, void* /* JPH_RVec3 */, void> CastCharacter;
     }
 
     [LibraryImport(LibName)]

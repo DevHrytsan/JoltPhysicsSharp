@@ -98,6 +98,52 @@ public class CharacterTests : BaseTest
         character.RemoveFromPhysicsSystem();
     }
 
+    [Test]
+    public void CharacterVsCharacterCollisionListener_IsCalled()
+    {
+        using PhysicsSystem system = CreateSystem(out _);
+        using CharacterVirtual character = CreateCharacterVirtual(system, new Vector3(0.5f, 5.0f, -0.25f));
+        using RecordingCharacterVsCharacterCollision listener = new();
+        character.SetCharacterVsCharacterCollision(listener);
+
+        character.LinearVelocity = new Vector3(1.0f, 0.0f, 0.0f);
+
+        float stepTime = 1.0f / 60.0f;
+
+        character.Update(stepTime, s_layer, system);
+
+        Assert.That(listener.CollideCount, Is.GreaterThan(0));
+        Assert.That(listener.CastCount, Is.GreaterThan(0));
+        Assert.That(listener.Character, Is.SameAs(character));
+        Assert.That(listener.BaseOffset.X, Is.EqualTo(0.5f).Within(0.1f));
+        Assert.That(listener.BaseOffset.Z, Is.EqualTo(-0.25f).Within(1e-5f));
+        Assert.That(listener.CastDirection.X, Is.GreaterThan(0.0f));
+
+        character.SetCharacterVsCharacterCollision(null);
+    }
+
+    private sealed class RecordingCharacterVsCharacterCollision : CharacterVsCharacterCollisionListener
+    {
+        public int CollideCount;
+        public int CastCount;
+        public CharacterVirtual? Character;
+        public Vector3 BaseOffset;
+        public Vector3 CastDirection;
+
+        protected override void CollideCharacter(CharacterVirtual character, in Matrix4x4 centerOfMassTransform, in CollideShapeSettings collideShapeSettings, in Vector3 baseOffset)
+        {
+            CollideCount++;
+            Character = character;
+            BaseOffset = baseOffset;
+        }
+
+        protected override void CastCharacter(CharacterVirtual character, in Matrix4x4 centerOfMassTransform, in Vector3 direction, in ShapeCastSettings shapeCastSettings, in Vector3 baseOffset)
+        {
+            CastCount++;
+            CastDirection = direction;
+        }
+    }
+
     private static PhysicsSystem CreateSystem(out BodyID floor)
     {
         ObjectLayerPairFilterTable objectLayerPairFilter = new(1);

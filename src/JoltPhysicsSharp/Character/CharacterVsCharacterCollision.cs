@@ -9,6 +9,10 @@ namespace JoltPhysicsSharp;
 
 public abstract class CharacterVsCharacterCollision : NativeObject
 {
+    protected CharacterVsCharacterCollision()
+    {
+    }
+
     protected CharacterVsCharacterCollision(nint handle)
         : base(handle)
     {
@@ -20,7 +24,7 @@ public abstract class CharacterVsCharacterCollision : NativeObject
     }
 }
 
-public abstract class CharacterVsCharacterCollisionListener : NativeObject
+public abstract class CharacterVsCharacterCollisionListener : CharacterVsCharacterCollision
 {
     private static readonly JPH_CharacterVsCharacterCollision_Procs _procs;
     private readonly nint _listenerUserData;
@@ -48,52 +52,100 @@ public abstract class CharacterVsCharacterCollisionListener : NativeObject
         gch.Free();
     }
 
-    protected abstract void CollideCharacter(
+    protected virtual void CollideCharacter(
         CharacterVirtual character,
         in Matrix4x4 centerOfMassTransform,
         in CollideShapeSettings collideShapeSettings,
-        in Vector3 baseOffset/*, CollideShapeCollector &ioCollector*/);
+        in Vector3 baseOffset/*, CollideShapeCollector &ioCollector*/)
+    {
+    }
 
-    protected abstract void CastCharacter(
+    protected virtual void CollideCharacter(
+        CharacterVirtual character,
+        in RMatrix4x4 centerOfMassTransform,
+        in CollideShapeSettings collideShapeSettings,
+        in RVector3 baseOffset/*, CollideShapeCollector &ioCollector*/)
+    {
+    }
+
+    protected virtual void CastCharacter(
         CharacterVirtual character,
         in Matrix4x4 centerOfMassTransform,
         in Vector3 direction,
         in ShapeCastSettings collideShapeSettings,
-        in Vector3 baseOffset/*, CastShapeCollector  &ioCollector*/);
+        in Vector3 baseOffset/*, CastShapeCollector  &ioCollector*/)
+    {
+    }
+
+    protected virtual void CastCharacter(
+        CharacterVirtual character,
+        in RMatrix4x4 centerOfMassTransform,
+        in Vector3 direction,
+        in ShapeCastSettings collideShapeSettings,
+        in RVector3 baseOffset/*, CastShapeCollector  &ioCollector*/)
+    {
+    }
 
     #region CharacterContactListener
     [UnmanagedCallersOnly]
     private static unsafe void OnCollideCharacterCallback(nint context,
-        nint character, Mat4* centerOfMassTransform,
+        nint character,
+        void* centerOfMassTransform, // JPH_RMat4
         JPH_CollideShapeSettings* collideShapeSettings,
-        Vector3* baseOffset)
+        void* baseOffset) // JPH_RVec3
     {
         CharacterVsCharacterCollisionListener listener = DelegateProxies.GetUserData<CharacterVsCharacterCollisionListener>(context, out _);
 
-        listener.CollideCharacter(
-            CharacterVirtual.GetObject(character)!,
-            centerOfMassTransform->FromJolt(),
-            CollideShapeSettings.FromNative(*collideShapeSettings),
-            *baseOffset
-            );
+        if (DoublePrecision)
+        {
+            listener.CollideCharacter(
+                CharacterVirtual.GetObject(character)!,
+                *(RMatrix4x4*)centerOfMassTransform,
+                CollideShapeSettings.FromNative(*collideShapeSettings),
+                *(RVector3*)baseOffset
+                );
+        }
+        else
+        {
+            listener.CollideCharacter(
+                CharacterVirtual.GetObject(character)!,
+                ((Mat4*)centerOfMassTransform)->FromJolt(),
+                CollideShapeSettings.FromNative(*collideShapeSettings),
+                *(Vector3*)baseOffset
+                );
+        }
     }
 
     [UnmanagedCallersOnly]
     private static unsafe void OnCastCharacterCallback(nint context,
-        nint character, Mat4* centerOfMassTransform,
+        nint character,
+        void* centerOfMassTransform, // JPH_RMat4
         Vector3* direction,
         JPH_ShapeCastSettings* collideShapeSettings,
-        Vector3* baseOffset)
+        void* baseOffset) // JPH_RVec3
     {
         CharacterVsCharacterCollisionListener listener = DelegateProxies.GetUserData<CharacterVsCharacterCollisionListener>(context, out _);
 
-        listener.CastCharacter(
-            CharacterVirtual.GetObject(character)!,
-            centerOfMassTransform->FromJolt(),
-            *direction,
-            ShapeCastSettings.FromNative(*collideShapeSettings),
-            *baseOffset
-            );
+        if (DoublePrecision)
+        {
+            listener.CastCharacter(
+                CharacterVirtual.GetObject(character)!,
+                *(RMatrix4x4*)centerOfMassTransform,
+                *direction,
+                ShapeCastSettings.FromNative(*collideShapeSettings),
+                *(RVector3*)baseOffset
+                );
+        }
+        else
+        {
+            listener.CastCharacter(
+                CharacterVirtual.GetObject(character)!,
+                ((Mat4*)centerOfMassTransform)->FromJolt(),
+                *direction,
+                ShapeCastSettings.FromNative(*collideShapeSettings),
+                *(Vector3*)baseOffset
+                );
+        }
     }
     #endregion
 }
