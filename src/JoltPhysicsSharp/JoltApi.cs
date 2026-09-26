@@ -2904,7 +2904,10 @@ internal static unsafe partial class JoltApi
     public static partial bool JPH_CharacterBase_IsSupported(nint handle);
 
     [LibraryImport(LibName)]
-    public static partial void JPH_CharacterBase_GetGroundPosition(nint handle, out Vector3 position); // RVec3
+    public static partial void JPH_CharacterBase_GetGroundPosition(nint handle, out Vector3 position);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterBase_GetGroundPosition(nint handle, out RVector3 position);
 
     [LibraryImport(LibName)]
     public static partial void JPH_CharacterBase_GetGroundNormal(nint handle, out Vector3 normal);
@@ -3066,10 +3069,16 @@ internal static unsafe partial class JoltApi
     public static partial void JPH_CharacterVirtual_SetLinearVelocity(nint handle, in Vector3 velocity);
 
     [LibraryImport(LibName)]
-    public static partial void JPH_CharacterVirtual_GetPosition(nint handle, out Vector3 position); // RVec3
+    public static partial void JPH_CharacterVirtual_GetPosition(nint handle, out Vector3 position);
 
     [LibraryImport(LibName)]
-    public static partial void JPH_CharacterVirtual_SetPosition(nint handle, in Vector3 position);// RVec3
+    public static partial void JPH_CharacterVirtual_GetPosition(nint handle, out RVector3 position);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterVirtual_SetPosition(nint handle, in Vector3 position);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterVirtual_SetPosition(nint handle, in RVector3 position);
 
     [LibraryImport(LibName)]
     public static partial void JPH_CharacterVirtual_GetRotation(nint handle, out Quaternion rotation);
@@ -3078,10 +3087,16 @@ internal static unsafe partial class JoltApi
     public static partial void JPH_CharacterVirtual_SetRotation(nint handle, in Quaternion rotation);
 
     [LibraryImport(LibName)]
-    public static partial void JPH_CharacterVirtual_GetWorldTransform(nint shape, Mat4* result); //RMatrix4x4
+    public static partial void JPH_CharacterVirtual_GetWorldTransform(nint shape, Mat4* result);
 
     [LibraryImport(LibName)]
-    public static partial void JPH_CharacterVirtual_GetCenterOfMassTransform(nint shape, Mat4* result); //RMatrix4x4
+    public static partial void JPH_CharacterVirtual_GetWorldTransform(nint shape, out RMatrix4x4 result);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterVirtual_GetCenterOfMassTransform(nint shape, Mat4* result);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterVirtual_GetCenterOfMassTransform(nint shape, out RMatrix4x4 result);
 
     [LibraryImport(LibName)]
     public static partial float JPH_CharacterVirtual_GetMass(nint handle);
@@ -3199,11 +3214,37 @@ internal static unsafe partial class JoltApi
         public Bool8 isBackFacingContact;
     }
 
+    public struct JPH_CharacterContactDouble
+    {
+        public ulong hash;
+        public BodyID bodyB;
+        public CharacterID characterIDB;
+        public SubShapeID subShapeIDB;
+        public RVector3 position;
+        public Vector3 linearVelocity;
+        public Vector3 contactNormal;
+        public Vector3 surfaceNormal;
+        public float distance;
+        public float fraction;
+        public MotionType motionTypeB;
+        public Bool8 isSensorB;
+        public /*const JPH_CharacterVirtual**/nint characterB;
+        public ulong userData;
+        public /*const JPH_PhysicsMaterial**/nint material;
+        public Bool8 hadCollision;
+        public Bool8 wasDiscarded;
+        public Bool8 canPushCharacter;
+        public Bool8 isBackFacingContact;
+    }
+
     [LibraryImport(LibName)]
     public static partial int JPH_CharacterVirtual_GetNumActiveContacts(nint character);
 
     [LibraryImport(LibName)]
     public static partial void JPH_CharacterVirtual_GetActiveContact(nint character, int index, JPH_CharacterContact* result);
+
+    [LibraryImport(LibName)]
+    public static partial void JPH_CharacterVirtual_GetActiveContact(nint character, int index, JPH_CharacterContactDouble* result);
 
     [LibraryImport(LibName)]
     [return: MarshalAs(UnmanagedType.U1)]
@@ -3228,8 +3269,8 @@ internal static unsafe partial class JoltApi
         public delegate* unmanaged<nint, nint, JPH_CharacterContact*, CharacterContactSettings*, void> OnCharacterContactAdded;
         public delegate* unmanaged<nint, nint, JPH_CharacterContact*, CharacterContactSettings*, void> OnCharacterContactPersisted;
         public delegate* unmanaged<nint, nint, CharacterID, SubShapeID, void> OnCharacterContactRemoved;
-        public delegate* unmanaged<nint, nint, BodyID, SubShapeID, Vector3*, Vector3*, Vector3*, nint, Vector3*, Vector3*, void> OnContactSolve;
-        public delegate* unmanaged<nint, nint, nint, SubShapeID, Vector3*, Vector3*, Vector3*, nint, Vector3*, Vector3*, void> OnCharacterContactSolve;
+        public delegate* unmanaged<nint, nint, BodyID, SubShapeID, void* /* JPH_RVec3 */, Vector3*, Vector3*, nint, Vector3*, Vector3*, void> OnContactSolve;
+        public delegate* unmanaged<nint, nint, nint, SubShapeID, void* /* JPH_RVec3 */, Vector3*, Vector3*, nint, Vector3*, Vector3*, void> OnCharacterContactSolve;
     }
 
     [LibraryImport(LibName)]

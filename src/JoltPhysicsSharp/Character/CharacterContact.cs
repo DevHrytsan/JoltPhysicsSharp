@@ -12,6 +12,7 @@ public struct CharacterContact
     public CharacterID CharacterIDB;
     public SubShapeID SubShapeIDB;
     public Vector3 Position;
+    public RVector3 RPosition;
     public Vector3 LinearVelocity;
     public Vector3 ContactNormal;
     public Vector3 SurfaceNormal;
@@ -29,11 +30,42 @@ public struct CharacterContact
 
     internal unsafe void FromNative(JPH_CharacterContact* native)
     {
+        if (DoublePrecision)
+        {
+            FromNative((JPH_CharacterContactDouble*)native);
+            return;
+        }
+
         Hash = native->hash;
         BodyB = native->bodyB;
         CharacterIDB = native->characterIDB;
         SubShapeIDB = native->subShapeIDB;
         Position = native->position;
+        RPosition = native->position;
+        LinearVelocity = native->linearVelocity;
+        ContactNormal = native->contactNormal;
+        SurfaceNormal = native->surfaceNormal;
+        Distance = native->distance;
+        Fraction = native->fraction;
+        MotionTypeB = native->motionTypeB;
+        IsSensorB = native->isSensorB;
+        CharacterB = CharacterVirtual.GetObject(native->characterB);
+        UserData = native->userData;
+        Material = PhysicsMaterial.GetObject(native->material);
+        HadCollision = native->hadCollision;
+        WasDiscarded = native->wasDiscarded;
+        CanPushCharacter = native->canPushCharacter;
+        IsBackFacingContact = native->isBackFacingContact;
+    }
+
+    internal unsafe void FromNative(JPH_CharacterContactDouble* native)
+    {
+        Hash = native->hash;
+        BodyB = native->bodyB;
+        CharacterIDB = native->characterIDB;
+        SubShapeIDB = native->subShapeIDB;
+        Position = (Vector3)native->position;
+        RPosition = native->position;
         LinearVelocity = native->linearVelocity;
         ContactNormal = native->contactNormal;
         SurfaceNormal = native->surfaceNormal;

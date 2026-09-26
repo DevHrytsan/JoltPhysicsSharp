@@ -82,33 +82,101 @@ public sealed class Character : CharacterBase
 
     public (Vector3 position, Quaternion rotation) GetPositionAndRotation(bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRPositionAndRotation)}");
+
         JPH_Character_GetPositionAndRotation(Handle, out Vector3 position, out Quaternion rotation, lockBodies);
         return (position, rotation);
     }
 
     public void GetPositionAndRotation(out Vector3 position, out Quaternion rotation, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRPositionAndRotation)}");
+
+        JPH_Character_GetPositionAndRotation(Handle, out position, out rotation, lockBodies);
+    }
+
+    public (RVector3 position, Quaternion rotation) GetRPositionAndRotation(bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetPositionAndRotation)}");
+
+        JPH_Character_GetPositionAndRotation(Handle, out RVector3 position, out Quaternion rotation, lockBodies);
+        return (position, rotation);
+    }
+
+    public void GetRPositionAndRotation(out RVector3 position, out Quaternion rotation, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetPositionAndRotation)}");
+
         JPH_Character_GetPositionAndRotation(Handle, out position, out rotation, lockBodies);
     }
 
     public void SetPositionAndRotation(in Vector3 position, in Quaternion rotation, Activation activationMode = Activation.Activate, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(SetRPositionAndRotation)}");
+
+        JPH_Character_SetPositionAndRotation(Handle, in position, in rotation, activationMode, lockBodies);
+    }
+
+    public void SetRPositionAndRotation(in RVector3 position, in Quaternion rotation, Activation activationMode = Activation.Activate, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(SetPositionAndRotation)}");
+
         JPH_Character_SetPositionAndRotation(Handle, in position, in rotation, activationMode, lockBodies);
     }
 
     public Vector3 GetPosition(bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRPosition)}");
+
         JPH_Character_GetPosition(Handle, out Vector3 result, lockBodies);
         return result;
     }
 
     public void GetPosition(out Vector3 position, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRPosition)}");
+
+        JPH_Character_GetPosition(Handle, out position, lockBodies);
+    }
+
+    public RVector3 GetRPosition(bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetPosition)}");
+
+        JPH_Character_GetPosition(Handle, out RVector3 result, lockBodies);
+        return result;
+    }
+
+    public void GetRPosition(out RVector3 position, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetPosition)}");
+
         JPH_Character_GetPosition(Handle, out position, lockBodies);
     }
 
     public void SetPosition(in Vector3 position, Activation activationMode = Activation.Activate, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(SetRPosition)}");
+
+        JPH_Character_SetPosition(Handle, in position, activationMode, lockBodies);
+    }
+
+    public void SetRPosition(in RVector3 position, Activation activationMode = Activation.Activate, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(SetPosition)}");
+
         JPH_Character_SetPosition(Handle, in position, activationMode, lockBodies);
     }
 
@@ -130,17 +198,43 @@ public sealed class Character : CharacterBase
 
     public Vector3 GetCenterOfMassPosition(bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRCenterOfMassPosition)}");
+
         JPH_Character_GetCenterOfMassPosition(Handle, out Vector3 result, lockBodies);
         return result;
     }
 
     public void GetCenterOfMassPosition(out Vector3 position, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRCenterOfMassPosition)}");
+
+        JPH_Character_GetCenterOfMassPosition(Handle, out position, lockBodies);
+    }
+
+    public RVector3 GetRCenterOfMassPosition(bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetCenterOfMassPosition)}");
+
+        JPH_Character_GetCenterOfMassPosition(Handle, out RVector3 result, lockBodies);
+        return result;
+    }
+
+    public void GetRCenterOfMassPosition(out RVector3 position, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetCenterOfMassPosition)}");
+
         JPH_Character_GetCenterOfMassPosition(Handle, out position, lockBodies);
     }
 
     public unsafe Matrix4x4 GetWorldTransform(bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRWorldTransform)}");
+
         Mat4 joltMatrix;
         JPH_Character_GetWorldTransform(Handle, &joltMatrix, lockBodies);
         return joltMatrix.FromJolt();
@@ -148,9 +242,29 @@ public sealed class Character : CharacterBase
 
     public unsafe void GetWorldTransform(out Matrix4x4 result, bool lockBodies = true)
     {
+        if (DoublePrecision)
+            throw new InvalidOperationException($"Double precision is enabled: use {nameof(GetRWorldTransform)}");
+
         Mat4 joltMatrix;
         JPH_Character_GetWorldTransform(Handle, &joltMatrix, lockBodies);
         result = joltMatrix.FromJolt();
+    }
+
+    public RMatrix4x4 GetRWorldTransform(bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetWorldTransform)}");
+
+        JPH_Character_GetWorldTransform(Handle, out RMatrix4x4 result, lockBodies);
+        return result;
+    }
+
+    public void GetRWorldTransform(out RMatrix4x4 result, bool lockBodies = true)
+    {
+        if (!DoublePrecision)
+            throw new InvalidOperationException($"Double precision is disabled: use {nameof(GetWorldTransform)}");
+
+        JPH_Character_GetWorldTransform(Handle, out result, lockBodies);
     }
 
     public BodyID BodyID

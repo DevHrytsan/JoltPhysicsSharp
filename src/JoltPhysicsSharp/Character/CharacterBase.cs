@@ -60,7 +60,22 @@ public abstract class CharacterBase : NativeObject
     {
         get
         {
+            if (DoublePrecision)
+                throw new InvalidOperationException($"Double precision is enabled: use {nameof(RGroundPosition)}");
+
             JPH_CharacterBase_GetGroundPosition(Handle, out Vector3 position);
+            return position;
+        }
+    }
+
+    public RVector3 RGroundPosition
+    {
+        get
+        {
+            if (!DoublePrecision)
+                throw new InvalidOperationException($"Double precision is disabled: use {nameof(GroundPosition)}");
+
+            JPH_CharacterBase_GetGroundPosition(Handle, out RVector3 position);
             return position;
         }
     }

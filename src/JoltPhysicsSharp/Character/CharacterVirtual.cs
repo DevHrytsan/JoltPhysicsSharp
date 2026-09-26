@@ -219,11 +219,36 @@ public sealed partial class CharacterVirtual : CharacterBase
     {
         get
         {
+            if (DoublePrecision)
+                throw new InvalidOperationException($"Double precision is enabled: use {nameof(RPosition)}");
+
             JPH_CharacterVirtual_GetPosition(Handle, out Vector3 result);
             return result;
         }
         set
         {
+            if (DoublePrecision)
+                throw new InvalidOperationException($"Double precision is enabled: use {nameof(RPosition)}");
+
+            JPH_CharacterVirtual_SetPosition(Handle, in value);
+        }
+    }
+
+    public RVector3 RPosition
+    {
+        get
+        {
+            if (!DoublePrecision)
+                throw new InvalidOperationException($"Double precision is disabled: use {nameof(Position)}");
+
+            JPH_CharacterVirtual_GetPosition(Handle, out RVector3 result);
+            return result;
+        }
+        set
+        {
+            if (!DoublePrecision)
+                throw new InvalidOperationException($"Double precision is disabled: use {nameof(Position)}");
+
             JPH_CharacterVirtual_SetPosition(Handle, in value);
         }
     }
@@ -245,9 +270,24 @@ public sealed partial class CharacterVirtual : CharacterBase
     {
         get
         {
+            if (DoublePrecision)
+                throw new InvalidOperationException($"Double precision is enabled: use {nameof(RWorldTransform)}");
+
             Mat4 joltMatrix;
             JPH_CharacterVirtual_GetWorldTransform(Handle, &joltMatrix);
             return joltMatrix.FromJolt();
+        }
+    }
+
+    public RMatrix4x4 RWorldTransform
+    {
+        get
+        {
+            if (!DoublePrecision)
+                throw new InvalidOperationException($"Double precision is disabled: use {nameof(WorldTransform)}");
+
+            JPH_CharacterVirtual_GetWorldTransform(Handle, out RMatrix4x4 result);
+            return result;
         }
     }
 
@@ -255,9 +295,24 @@ public sealed partial class CharacterVirtual : CharacterBase
     {
         get
         {
+            if (DoublePrecision)
+                throw new InvalidOperationException($"Double precision is enabled: use {nameof(RCenterOfMassTransform)}");
+
             Mat4 joltMatrix;
             JPH_CharacterVirtual_GetCenterOfMassTransform(Handle, &joltMatrix);
             return joltMatrix.FromJolt();
+        }
+    }
+
+    public RMatrix4x4 RCenterOfMassTransform
+    {
+        get
+        {
+            if (!DoublePrecision)
+                throw new InvalidOperationException($"Double precision is disabled: use {nameof(CenterOfMassTransform)}");
+
+            JPH_CharacterVirtual_GetCenterOfMassTransform(Handle, out RMatrix4x4 result);
+            return result;
         }
     }
 
@@ -456,44 +511,48 @@ public sealed partial class CharacterVirtual : CharacterBase
         return JPH_CharacterVirtual_GetNumActiveContacts(Handle);
     }
 
-    public unsafe CharacterContact GetActiveContact(int index)
+    public CharacterContact GetActiveContact(int index)
     {
-        JPH_CharacterContact native = default;
-        JPH_CharacterVirtual_GetActiveContact(Handle, index, &native);
-
         CharacterContact result = new();
-        result.FromNative(&native);
+        ReadActiveContact(index, ref result);
         return result;
     }
 
-    public unsafe void GetActiveContact(int index, out CharacterContact contact)
+    public void GetActiveContact(int index, out CharacterContact contact)
     {
-        JPH_CharacterContact native = default;
-        JPH_CharacterVirtual_GetActiveContact(Handle, index, &native);
-
         contact = default;
-        contact.FromNative(&native);
+        ReadActiveContact(index, ref contact);
     }
 
-    public unsafe void GetActiveContacts(CharacterContact[] contacts)
+    public void GetActiveContacts(CharacterContact[] contacts)
     {
         for (int i = 0; i < contacts.Length; i++)
         {
-            JPH_CharacterContact native = default;
-            JPH_CharacterVirtual_GetActiveContact(Handle, i, &native);
-
-            contacts[i].FromNative(&native);
+            ReadActiveContact(i, ref contacts[i]);
         }
     }
 
-    public unsafe void GetActiveContacts(Span<CharacterContact> contacts)
+    public void GetActiveContacts(Span<CharacterContact> contacts)
     {
         for (int i = 0; i < contacts.Length; i++)
         {
-            JPH_CharacterContact native = default;
-            JPH_CharacterVirtual_GetActiveContact(Handle, i, &native);
+            ReadActiveContact(i, ref contacts[i]);
+        }
+    }
 
-            contacts[i].FromNative(&native);
+    private unsafe void ReadActiveContact(int index, ref CharacterContact contact)
+    {
+        if (DoublePrecision)
+        {
+            JPH_CharacterContactDouble native = default;
+            JPH_CharacterVirtual_GetActiveContact(Handle, index, &native);
+            contact.FromNative(&native);
+        }
+        else
+        {
+            JPH_CharacterContact native = default;
+            JPH_CharacterVirtual_GetActiveContact(Handle, index, &native);
+            contact.FromNative(&native);
         }
     }
 
@@ -527,6 +586,11 @@ public sealed partial class CharacterVirtual : CharacterBase
     }
 
     #region CharacterContactListener
+    private static unsafe RVector3 ReadRVec3(void* value)
+    {
+        return DoublePrecision ? *(RVector3*)value : new RVector3(*(Vector3*)value);
+    }
+
     [UnmanagedCallersOnly]
     private static unsafe void OnAdjustBodyVelocityCallback(nint context,
         nint character, nint body2, Vector3* ioLinearVelocity, Vector3* ioAngularVelocity)
@@ -660,7 +724,7 @@ public sealed partial class CharacterVirtual : CharacterBase
     [UnmanagedCallersOnly]
     private static unsafe void OnContactSolveCallback(nint context, nint character,
         BodyID bodyID2, SubShapeID subShapeID2,
-        Vector3* contactPosition, // JPH_RVec3
+        void* contactPosition, // JPH_RVec3
         Vector3* contactNormal,
         Vector3* contactVelocity,
         nint contactMaterial, // JPH_PhysicsMaterial
@@ -673,7 +737,7 @@ public sealed partial class CharacterVirtual : CharacterBase
         {
             Vector3 newCharacterVelocity = *ioNewCharacterVelocity;
             listener.OnContactSolve(listener, bodyID2, subShapeID2,
-                new RVector3(*contactPosition),
+                ReadRVec3(contactPosition),
                 *contactNormal,
                 *contactVelocity,
                 PhysicsMaterial.GetObject(contactMaterial),
@@ -688,7 +752,7 @@ public sealed partial class CharacterVirtual : CharacterBase
     private static unsafe void OnCharacterContactSolveCallback(nint context, nint character,
         nint otherCharacter,
         SubShapeID subShapeID2,
-        Vector3* contactPosition, // JPH_RVec3
+        void* contactPosition, // JPH_RVec3
         Vector3* contactNormal,
         Vector3* contactVelocity,
         nint contactMaterial, // JPH_PhysicsMaterial
@@ -702,7 +766,7 @@ public sealed partial class CharacterVirtual : CharacterBase
             Vector3 newCharacterVelocity = *ioNewCharacterVelocity;
             listener.OnCharacterContactSolve(listener, GetObject(otherCharacter)!,
                 subShapeID2,
-                new RVector3(*contactPosition),
+                ReadRVec3(contactPosition),
                 *contactNormal,
                 *contactVelocity,
                 PhysicsMaterial.GetObject(contactMaterial),
